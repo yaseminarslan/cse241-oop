@@ -1,5 +1,5 @@
 CPP=g++
-SOURCE_FILE=b.cpp
+SOURCE_FILE=hw3.cpp
 TARGET=a.out
 
 all:
