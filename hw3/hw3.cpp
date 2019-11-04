@@ -8,6 +8,8 @@
 #include <iostream>
 #include <iomanip>
 #include <ctime>
+#include <cmath>
+
 
 using namespace std;
 
@@ -23,11 +25,14 @@ public:
     int move(char m);
     bool isSolved();
     int swap_loc(int n);
+    int getScore();
+
 
 private:
     int brd[11][11];
     int gi, gj;
     int row, column;
+    int max;
 };
 
 class NPuzzle
@@ -56,7 +61,7 @@ private:
 int main()
 {
     NPuzzle p1;
-    p1.setSize(3,5);
+    p1.setSize(3,3);
     p1.move('l');
     p1.print();
     cout << "Puzzle report: ";
@@ -150,7 +155,52 @@ void NPuzzle::moveRandom(){
 // make an intelligent move
 // not complete
 void NPuzzle::moveIntelligent(){
-    shuffle(1);
+    int min = 100000;
+    char m;
+    int s = 0, s1 = 0, s2 = 0, s3 = 0, s4 = 0;
+
+    Board bUp = b1;
+    s = bUp.move('u');
+    //bUp.print();
+    if (s == 1) {
+         s1 = bUp.getScore();
+        min = s1;
+        m = 'u';
+    }
+    Board bDown = b1;
+    s = bDown.move('d');
+   // bDown.print();
+    if (s == 1) {
+        s2 = bDown.getScore();
+        if (s2 < min) {
+            min = s2;
+            m = 'd';
+        }
+    }
+
+    Board bLeft = b1;
+    s = bLeft.move('l'); 
+    //bLeft.print();
+    if (s == 1) {
+        s3 = bLeft.getScore();
+        if (s3 < min) {
+            min = s3;
+            m = 'l';
+        }
+    }
+
+    Board bRight = b1;
+    s = bRight.move('r');
+    //bRight.print();
+    if (s == 1) {
+        s4 = bRight.getScore();
+        if (s4 < min) {
+            min = s4;
+            m = 'r';
+        }
+    }
+
+    b1.move(m);
     counter++;
 }
 
@@ -168,7 +218,7 @@ void NPuzzle::move(char m){
         moveIntelligent();
     }
     else if (m == 'S' || (m == 's')) {
-        reset(); 
+        reset();
         shuffle(row*column);
         counter = 0;
     }
@@ -185,6 +235,17 @@ void NPuzzle::move(char m){
 // solve puzzle
 // not complete
 void NPuzzle::solvePuzzle(){
+    int c = 0;
+    while(!b1.isSolved()) {
+        if (c++ == 4) {
+            c = 0;
+            moveIntelligent(); 
+        } else {
+            moveRandom();
+        }
+        b1.print();
+    }
+    printReport();
 }
 
 // Board member functions
@@ -200,7 +261,7 @@ void Board::print()
 {
     for(int i=1; i<=row; i++) {
         for(int j=1; j<=column; j++) {
-            if(brd[i][j] == -1) {
+            if(brd[i][j] == max) {
                 cout << "bb" << " ";
             }
             else{
@@ -233,7 +294,6 @@ void Board::reset()
             brd[i][j] = x++;
         }
     }
-    brd[row][column] = -1;
     gi = row;
     gj = column;
 }
@@ -248,6 +308,7 @@ void Board::setSize(int r, int c)
     else {
         row = r;
         column = c;
+        max = r * c;
     }
     reset();
 }
@@ -300,15 +361,10 @@ int Board::move(char m){
 bool Board::isSolved()
 {
     int x = 1;
-    if(brd[row][column] != -1) {
-        return false;
-    }
     for(int i=1; i<=row; i++) {
         for(int j=1; j<=column; j++) {
             if ( brd[i][j] != x++) {
-                if ((i != row) && (j != column)) {
-                    return false;
-                }
+                return false;
             }
         }
     }
@@ -319,30 +375,45 @@ int Board::swap_loc(int n) {
     if(n == 1) { // swap left   
         if(brd[gi][gj-1] != 0) {
             brd[gi][gj] = brd[gi][gj-1];
-            brd[gi][--gj] = -1;
+            brd[gi][--gj] = max;
             return 1;
         }
     }
     else if (n == 2) { // swap right
         if(brd[gi][gj+1] != 0){
             brd[gi][gj] = brd[gi][gj+1];
-            brd[gi][++gj] = -1;
+            brd[gi][++gj] = max;
             return 1;
         }        
     }
     else if (n == 3) { // swap up    
         if(brd[gi-1][gj] != 0){
             brd[gi][gj] = brd[gi-1][gj];
-            brd[--gi][gj] = -1;
+            brd[--gi][gj] = max;
             return 1;
         }
     }
     else if (n == 4) { // swap down
         if(brd[gi+1][gj] != 0){
             brd[gi][gj] = brd[gi+1][gj];
-            brd[++gi][gj] = -1;
+            brd[++gi][gj] = max;
             return 1;
         }
     }
     return 0;
 }
+
+// compare current board to solution
+int Board::getScore(){
+    int sum = 0;
+    int idx = 1;
+    for(int i=1; i<=row; i++){
+        for(int j=1; j<=column; j++){
+            //cout << "item: " << brd[i][j] << " :: " << idx << endl;
+            sum = sum + (int)(abs(brd[i][j] - idx) * ((float)row*column/idx));
+            idx++;
+        }
+    }
+    //cout << sum << endl;;
+    return sum;
+}f
